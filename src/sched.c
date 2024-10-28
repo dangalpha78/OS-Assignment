@@ -47,6 +47,23 @@ struct pcb_t * get_mlq_proc(void) {
 	/*TODO: get a process from PRIORITY [ready_queue].
 	 * Remember to use lock to protect the queue.
 	 * */
+	int prio = 0;
+	int curr_slot = 0;
+	pthread_mutex_lock(&queue_lock);
+
+	while (prio < MAX_PRIO){
+		curr_slot = MAX_PRIO - prio;
+		if (!empty(&mlq_ready_queue[prio]) && mlq_ready_queue[prio].count_slot < curr_slot){
+			proc = dequeue(&mlq_ready_queue[prio]);
+			curr_slot--;
+			break;
+		}
+		else{
+			prio = (prio + 1) % MAX_PRIO;
+			curr_slot = 0;
+		}
+	}
+	pthread_mutex_unlock(&queue_lock);
 	return proc;	
 }
 
@@ -79,6 +96,9 @@ struct pcb_t * get_proc(void) {
 	/*TODO: get a process from [ready_queue].
 	 * Remember to use lock to protect the queue.
 	 * */
+	pthread_mutex_lock(&queue_lock);
+	dequeue(&run_queue);
+	pthread_mutex_unlock(&queue_lock);
 	return proc;
 }
 
